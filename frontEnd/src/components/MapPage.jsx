@@ -38,10 +38,9 @@ export default function MapPage({ darkMode, reports, externalcenter }) {
   const [selectedReport, setSelectedReport] = useState(null);
 
   // =====================================================================
-  // 🔴 URL BACKEND HARDCODAT (FORȚAT)
+  // 🔴 URL SERVER RAILWAY (Adresa exactă care merge în browser)
   // =====================================================================
-  // Acesta este serverul unde sunt stocate pozele fizic (Volumul)
-  const BACKEND_URL = 'https://clear-city-app-project-production.up.railway.app';
+  const SERVER_URL = 'https://clear-city-app-project-production.up.railway.app';
 
   const handleSearch = async (e) => {
     if (e.key === 'Enter' && searchTerm.trim() !== '') {
@@ -55,6 +54,28 @@ export default function MapPage({ darkMode, reports, externalcenter }) {
             }
         } catch (error) { console.error(error); }
     }
+  };
+
+  // 🔴 FUNCȚIA CARE REPARĂ LINK-UL POZEI
+  const getImageUrl = (report) => {
+    // 1. Luăm calea din baza de date (verificăm ambele nume posibile)
+    let path = report.image || report.image_url;
+
+    // 2. Dacă nu există, punem o poză generică
+    if (!path) return "https://placehold.co/600x400?text=Fara+Poza";
+
+    // 3. Dacă e deja un link complet (începe cu http), îl lăsăm așa
+    if (path.startsWith('http')) return path;
+
+    // 4. CURĂȚARE: Dacă path-ul nu începe cu '/', adăugăm noi unul
+    // Ca să fim siguri că nu lipim "https://site.comuploads" (greșit) ci "https://site.com/uploads" (corect)
+    if (!path.startsWith('/')) {
+        path = '/' + path;
+    }
+
+    // 5. LIPIREA FINALĂ
+    // Rezultatul va fi exact link-ul care ți-a mers ție în browser
+    return `${SERVER_URL}${path}`;
   };
 
   return (
@@ -96,34 +117,19 @@ export default function MapPage({ darkMode, reports, externalcenter }) {
                         </div>
                         <p className="text-sm">{selectedReport.description}</p>
                         
-                        {/* ======================================================== */}
-                        {/* 🔴 AICI ESTE FIX-UL PENTRU IMAGINE */}
-                        {/* ======================================================== */}
-                        <div className="mt-4 rounded-lg w-full h-48 overflow-hidden bg-gray-100 relative">
+                        {/* 🔴 AICI SE AFIȘEAZĂ POZA FOLOSIND FUNCȚIA DE MAI SUS */}
+                        <div className="mt-4 rounded-lg w-full h-48 overflow-hidden bg-gray-100 relative border border-gray-200">
                              <img 
-                               src={(() => {
-                                 // 1. Verificăm ambele posibile nume de variabile
-                                 const path = selectedReport.image || selectedReport.image_url;
-                                 
-                                 // 2. Dacă nu există path, returnăm placeholder
-                                 if (!path) return "https://placehold.co/600x400?text=Fara+Imagine+Db";
-
-                                 // 3. Dacă e deja link http (extern), îl returnăm direct
-                                 if (path.startsWith('http')) return path;
-
-                                 // 4. FORȚARE: Construim link-ul manual către Railway
-                                 // Rezultat: https://...app/uploads/reports/file.jpg
-                                 return `${BACKEND_URL}${path}`;
-                               })()} 
+                               src={getImageUrl(selectedReport)} 
                                className="w-full h-full object-cover" 
                                alt="Raport"
                                onError={(e) => {
-                                 console.error("Nu pot încărca poza. Link generat:", e.target.src);
-                                 e.target.src = "https://placehold.co/600x400?text=Eroare+Server";
+                                 // Dacă tot dă eroare, afișăm link-ul în consolă ca să vedem ce a generat greșit
+                                 console.error("Link generat (care nu merge):", e.target.src);
+                                 e.target.src = "https://placehold.co/600x400?text=Eroare+Afisare";
                                }}
                              />
                         </div>
-                        {/* ======================================================== */}
 
                     </div>
                 </div>

@@ -14,10 +14,28 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
+// --- MODIFICARE PENTRU RAILWAY VOLUME ---
+// Definim calea absolută către folderul uploads. 
+// Pe Railway __dirname este de obicei '/app', deci folderul va fi '/app/uploads'
+const UPLOAD_BASE_PATH = path.join(__dirname, 'uploads');
+
+// Ne asigurăm că folderul de bază există la pornirea serverului
+(async () => {
+  try {
+    await fs.mkdir(UPLOAD_BASE_PATH, { recursive: true });
+    console.log(`Storage directory confirmed at: ${UPLOAD_BASE_PATH}`);
+  } catch (err) {
+    console.error('Error ensuring storage directory:', err);
+  }
+})();
+// ----------------------------------------
+
 // Middleware
 app.use(cors()); // Permite conexiuni de la orice origine (Frontend Railway)
 app.use(express.json());
-app.use('/uploads', express.static('uploads'));
+
+// MODIFICARE: Servim fișierele static folosind calea absolută
+app.use('/uploads', express.static(UPLOAD_BASE_PATH));
 
 // PostgreSQL Connection - MODIFICAT PENTRU RAILWAY
 // Railway foloseste un singur string de conexiune si necesita SSL
@@ -41,11 +59,15 @@ pool.connect((err, client, release) => {
 // File Upload Configuration
 const storage = multer.diskStorage({
   destination: async (req, file, cb) => {
-    const uploadDir = file.fieldname === 'profileImage' ? 'uploads/profiles' : 'uploads/reports';
+    // MODIFICARE: Folosim calea absolută (UPLOAD_BASE_PATH) pentru a salva pe Volum
+    const subFolder = file.fieldname === 'profileImage' ? 'profiles' : 'reports';
+    const uploadDir = path.join(UPLOAD_BASE_PATH, subFolder);
+    
     try {
       await fs.mkdir(uploadDir, { recursive: true });
       cb(null, uploadDir);
     } catch (error) {
+      console.error("Error creating upload directory:", error);
       cb(error);
     }
   },
@@ -297,6 +319,7 @@ app.post('/api/reports', authenticateToken, upload.single('image'), async (req, 
     let aiClassification = null;
 
     if (req.file) {
+      // MODIFICARE: Salvăm URL-ul relativ pentru baza de date
       imageUrl = `/uploads/reports/${req.file.filename}`;
       aiClassification = await classifyImage(req.file.path);
 
@@ -423,6 +446,7 @@ app.delete('/api/reports/:id', authenticateToken, async (req, res) => {
     }
 
     if (report.rows[0].image_url) {
+      // Aici path.join functioneaza corect cu __dirname pentru ca imaginea are deja calea /uploads/...
       const imagePath = path.join(__dirname, report.rows[0].image_url);
       try {
         await fs.unlink(imagePath);

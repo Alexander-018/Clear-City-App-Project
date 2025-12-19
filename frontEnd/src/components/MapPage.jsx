@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMap, ZoomControl, useMapEvents } from 'react-leaflet';
-import { useLocation } from 'react-router-dom'; // CERINTA: Pentru fix randare
+import { useLocation } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -36,6 +36,11 @@ export default function MapPage({ darkMode, reports, externalcenter }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchCenter, setSearchCenter] = useState(externalcenter || null);
   const [selectedReport, setSelectedReport] = useState(null);
+
+  // === MODIFICARE 1: Definim URL-ul Backend-ului ===
+  // Luăm variabila de mediu sau fallback la localhost, și scoatem '/api' dacă există, 
+  // pentru că pozele sunt la rădăcină (/uploads), nu în /api
+  const API_URL = process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
   const handleSearch = async (e) => {
     if (e.key === 'Enter' && searchTerm.trim() !== '') {
@@ -89,7 +94,21 @@ export default function MapPage({ darkMode, reports, externalcenter }) {
                             <button onClick={() => setSelectedReport(null)} className="p-2 hover:bg-gray-100 rounded-full"><X className="w-6 h-6"/></button>
                         </div>
                         <p className="text-sm">{selectedReport.description}</p>
-                        <img src={selectedReport.image || "https://placehold.co/600x400"} className="mt-4 rounded-lg w-full h-48 object-cover" />
+                        
+                        {/* === MODIFICARE 2: Construim URL-ul complet pentru imagine === */}
+                        <img 
+                          src={
+                            selectedReport.image 
+                              ? (selectedReport.image.startsWith('http') 
+                                  ? selectedReport.image 
+                                  : `${API_URL}${selectedReport.image}`) 
+                              : "https://placehold.co/600x400"
+                          } 
+                          className="mt-4 rounded-lg w-full h-48 object-cover" 
+                          alt="Raport"
+                        />
+                        {/* ======================================================== */}
+
                     </div>
                 </div>
             )}

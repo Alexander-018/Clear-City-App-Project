@@ -193,9 +193,12 @@ app.post('/api/auth/register', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Set default profile image for new users
+    const defaultProfileImage = '/uploads/profiles/default-avatar.png';
+
     const result = await pool.query(
-      'INSERT INTO users (name, email, password, location, latitude, longitude) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, name, email, role, level, xp, profile_image, location',
-      [name, email, hashedPassword, location || null, latitude || null, longitude || null]
+      'INSERT INTO users (name, email, password, location, latitude, longitude, profile_image) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, name, email, role, level, xp, profile_image, location',
+      [name, email, hashedPassword, location || null, latitude || null, longitude || null, defaultProfileImage]
     );
 
     const user = result.rows[0];

@@ -109,7 +109,7 @@ const classifyImage = async (imagePath) => {
   const ROBOFLOW_API_KEY = "GP7hlirAXz5tp5fL7h3k";
   const ROBOFLOW_MODEL_URL = "https://serverless.roboflow.com/trash-detection-ujrn0/1";
 
-  // Confidence and overlap thresholds (50%)
+  // Confidence and overlap thresholds 10%) 
   const CONFIDENCE_THRESHOLD = 0.10;
   const OVERLAP_THRESHOLD = 0.50;
 

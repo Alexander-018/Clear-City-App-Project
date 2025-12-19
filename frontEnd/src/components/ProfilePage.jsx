@@ -16,8 +16,8 @@ export default function ProfilePage({ currentUser, darkMode, reports, onLogout, 
   const [uploadingImage, setUploadingImage] = useState(false);
   const navigate = useNavigate();
 
-  // Acesta este URL-ul de backend (fără /api la final)
-  const API_URL = process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+  // 🔴 MODIFICARE: Folosim direct link-ul de Railway pentru a fi SIGURI că merge
+  const API_URL = 'https://clear-city-app-project-production.up.railway.app';
 
   useEffect(() => {
     loadProfile();
@@ -253,9 +253,11 @@ export default function ProfilePage({ currentUser, darkMode, reports, onLogout, 
                         <div 
                           className={`w-16 h-16 rounded-lg bg-cover bg-center shrink-0 border ${darkMode ? 'border-white/10' : 'border-gray-200'}`}
                           style={{
-                            // AICI AM REPARAT: Adăugăm API_URL dacă linkul nu e complet (exact ca la profil)
+                            // 🔴 MODIFICARE: Aplicăm aceeași logică de la profil și aici
                             backgroundImage: report.image 
-                              ? (report.image.startsWith('http') ? `url('${report.image}')` : `url('${API_URL}${report.image}')`) 
+                              ? (report.image.startsWith('http') 
+                                  ? `url('${report.image}')` 
+                                  : `url('${API_URL}${report.image}')`) 
                               : 'none', 
                             backgroundColor: darkMode ? '#333' : '#eee'
                           }}

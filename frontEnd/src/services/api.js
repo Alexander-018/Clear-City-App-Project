@@ -1,5 +1,5 @@
-// src/services/api.js - Serviciu API Complet Actualizat
 
+import axios from 'axios';
 // În services/api.js
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 

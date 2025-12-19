@@ -40,7 +40,8 @@ export default function MapPage({ darkMode, reports, externalcenter }) {
   // =====================================================================
   // 🔴 URL BACKEND HARDCODAT (FORȚAT)
   // =====================================================================
-  const API_URL = 'https://clear-city-app-project-production.up.railway.app';
+  // Acesta este serverul unde sunt stocate pozele fizic (Volumul)
+  const BACKEND_URL = 'https://clear-city-app-project-production.up.railway.app';
 
   const handleSearch = async (e) => {
     if (e.key === 'Enter' && searchTerm.trim() !== '') {
@@ -54,17 +55,6 @@ export default function MapPage({ darkMode, reports, externalcenter }) {
             }
         } catch (error) { console.error(error); }
     }
-  };
-
-  // Funcție helper pentru a construi URL-ul imaginii corect
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return "https://placehold.co/600x400?text=Fara+Imagine";
-    
-    // Dacă imaginea are deja http (link extern), o lăsăm așa
-    if (imagePath.startsWith('http')) return imagePath;
-    
-    // Dacă nu, lipim URL-ul hardcodat în față
-    return `${API_URL}${imagePath}`;
   };
 
   return (
@@ -106,15 +96,30 @@ export default function MapPage({ darkMode, reports, externalcenter }) {
                         </div>
                         <p className="text-sm">{selectedReport.description}</p>
                         
-                        {/* === MODIFICARE 2: Folosim funcția getImageUrl === */}
+                        {/* ======================================================== */}
+                        {/* 🔴 AICI ESTE FIX-UL PENTRU IMAGINE */}
+                        {/* ======================================================== */}
                         <div className="mt-4 rounded-lg w-full h-48 overflow-hidden bg-gray-100 relative">
                              <img 
-                               src={getImageUrl(selectedReport.image)} 
+                               src={(() => {
+                                 // 1. Verificăm ambele posibile nume de variabile
+                                 const path = selectedReport.image || selectedReport.image_url;
+                                 
+                                 // 2. Dacă nu există path, returnăm placeholder
+                                 if (!path) return "https://placehold.co/600x400?text=Fara+Imagine+Db";
+
+                                 // 3. Dacă e deja link http (extern), îl returnăm direct
+                                 if (path.startsWith('http')) return path;
+
+                                 // 4. FORȚARE: Construim link-ul manual către Railway
+                                 // Rezultat: https://...app/uploads/reports/file.jpg
+                                 return `${BACKEND_URL}${path}`;
+                               })()} 
                                className="w-full h-full object-cover" 
                                alt="Raport"
                                onError={(e) => {
-                                 // Dacă tot nu merge, punem un placeholder ca să nu arate urât
-                                 e.target.src = "https://placehold.co/600x400?text=Eroare+Imagine";
+                                 console.error("Nu pot încărca poza. Link generat:", e.target.src);
+                                 e.target.src = "https://placehold.co/600x400?text=Eroare+Server";
                                }}
                              />
                         </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Leaf, CheckCircle, Trophy, Recycle, Trash2, Info, Battery, ArrowRight, Loader2 } from 'lucide-react';
 
 const GlassCard = ({ children, className = "", onClick, darkMode }) => (

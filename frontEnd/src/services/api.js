@@ -1,10 +1,17 @@
-
 import axios from 'axios';
-// În services/api.js
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+// =====================================================================
+// 🔴 CONFIGURARE URL BACKEND (MODIFICAT)
+// =====================================================================
+// Acesta este link-ul tău de producție de pe Railway.
+// Îl exportăm ca să îl poți folosi și la afișarea imaginilor în alte fișiere.
+export const SERVER_URL = 'https://clear-city-app-project-production.up.railway.app';
+
+// URL-ul pentru API (construim adresa completă: server + /api)
+const API_URL = `${SERVER_URL}/api`;
 
 const api = axios.create({
-  baseURL: `${API_URL}/api`, // Aici adăugăm automat /api la final
+  baseURL: API_URL, 
 });
 
 const getAuthHeader = () => {

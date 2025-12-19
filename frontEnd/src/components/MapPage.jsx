@@ -37,10 +37,11 @@ export default function MapPage({ darkMode, reports, externalcenter }) {
   const [searchCenter, setSearchCenter] = useState(externalcenter || null);
   const [selectedReport, setSelectedReport] = useState(null);
 
-  // === MODIFICARE 1: Definim URL-ul Backend-ului ===
-  // Luăm variabila de mediu sau fallback la localhost, și scoatem '/api' dacă există, 
-  // pentru că pozele sunt la rădăcină (/uploads), nu în /api
-  const API_URL = process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+  // =====================================================================
+  // 🔴 MODIFICARE CRITICĂ: URL BACKEND FIX
+  // =====================================================================
+  // Folosim direct link-ul de producție. Nu mai depindem de variabile sau localhost.
+  const API_URL = 'https://clear-city-app-project-production.up.railway.app';
 
   const handleSearch = async (e) => {
     if (e.key === 'Enter' && searchTerm.trim() !== '') {
@@ -54,6 +55,13 @@ export default function MapPage({ darkMode, reports, externalcenter }) {
             }
         } catch (error) { console.error(error); }
     }
+  };
+
+  // Funcție helper pentru a construi URL-ul imaginii corect
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return "https://placehold.co/600x400?text=Fara+Imagine";
+    if (imagePath.startsWith('http')) return imagePath;
+    return `${API_URL}${imagePath}`;
   };
 
   return (
@@ -95,18 +103,18 @@ export default function MapPage({ darkMode, reports, externalcenter }) {
                         </div>
                         <p className="text-sm">{selectedReport.description}</p>
                         
-                        {/* === MODIFICARE 2: Construim URL-ul complet pentru imagine === */}
-                        <img 
-                          src={
-                            selectedReport.image 
-                              ? (selectedReport.image.startsWith('http') 
-                                  ? selectedReport.image 
-                                  : `${API_URL}${selectedReport.image}`) 
-                              : "https://placehold.co/600x400"
-                          } 
-                          className="mt-4 rounded-lg w-full h-48 object-cover" 
-                          alt="Raport"
-                        />
+                        {/* === MODIFICARE 2: Folosim funcția getImageUrl === */}
+                        <div className="mt-4 rounded-lg w-full h-48 overflow-hidden bg-gray-100 relative">
+                             <img 
+                               src={getImageUrl(selectedReport.image)} 
+                               className="w-full h-full object-cover" 
+                               alt="Raport"
+                               onError={(e) => {
+                                 // Dacă tot nu merge, punem un placeholder ca să nu arate urât
+                                 e.target.src = "https://placehold.co/600x400?text=Eroare+Imagine";
+                               }}
+                             />
+                        </div>
                         {/* ======================================================== */}
 
                     </div>

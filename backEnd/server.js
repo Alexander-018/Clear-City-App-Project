@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -16,17 +15,17 @@ const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 // Middleware
-app.use(cors());
+app.use(cors()); // Permite conexiuni de la orice origine (Frontend Railway)
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
-// PostgreSQL Connection
+// PostgreSQL Connection - MODIFICAT PENTRU RAILWAY
+// Railway foloseste un singur string de conexiune si necesita SSL
 const pool = new Pool({
-  user: process.env.DB_USER || 'postgres',
-  host: process.env.DB_HOST || 'localhost',
-  database: process.env.DB_NAME || 'clearcity',
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT || 5432,
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false // Obligatoriu pentru conexiunile Railway
+  }
 });
 
 // Test database connection
@@ -698,9 +697,8 @@ app.post('/api/admin/demote/:email', authenticateToken, isAdmin, async (req, res
   }
 });
 
-
-
-app.listen(PORT, () => {
+// MODIFICARE PORT: Bind la 0.0.0.0 pentru acces extern pe Railway
+app.listen(PORT, '0.0.0.0', () => {
   console.log(` Server running on port ${PORT}`);
   console.log(` API available at http://localhost:${PORT}/api`);
 });

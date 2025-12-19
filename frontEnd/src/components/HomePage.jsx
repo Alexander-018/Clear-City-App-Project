@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Leaf, CheckCircle, Trophy, Recycle, Trash2, Info, Battery, ArrowRight } from 'lucide-react';
 
 const GlassCard = ({ children, className = "", onClick, darkMode }) => (

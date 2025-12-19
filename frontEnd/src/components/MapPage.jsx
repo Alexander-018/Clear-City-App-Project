@@ -38,9 +38,8 @@ export default function MapPage({ darkMode, reports, externalcenter }) {
   const [selectedReport, setSelectedReport] = useState(null);
 
   // =====================================================================
-  // 🔴 MODIFICARE CRITICĂ: URL BACKEND FIX
+  // 🔴 URL BACKEND HARDCODAT (FORȚAT)
   // =====================================================================
-  // Folosim direct link-ul de producție. Nu mai depindem de variabile sau localhost.
   const API_URL = 'https://clear-city-app-project-production.up.railway.app';
 
   const handleSearch = async (e) => {
@@ -60,7 +59,11 @@ export default function MapPage({ darkMode, reports, externalcenter }) {
   // Funcție helper pentru a construi URL-ul imaginii corect
   const getImageUrl = (imagePath) => {
     if (!imagePath) return "https://placehold.co/600x400?text=Fara+Imagine";
+    
+    // Dacă imaginea are deja http (link extern), o lăsăm așa
     if (imagePath.startsWith('http')) return imagePath;
+    
+    // Dacă nu, lipim URL-ul hardcodat în față
     return `${API_URL}${imagePath}`;
   };
 

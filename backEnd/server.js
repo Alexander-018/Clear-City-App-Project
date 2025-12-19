@@ -305,6 +305,37 @@ app.get('/api/reports', async (req, res) => {
   }
 });
 
+// ==========================================
+// RUTA DE DEBUGGING PENTRU RAILWAY
+// ==========================================
+app.get('/debug-files', async (req, res) => {
+  try {
+    // Verificăm calea setată global în UPLOAD_BASE_PATH
+    const basePath = UPLOAD_BASE_PATH; 
+    
+    let profiles = [];
+    let reports = [];
+    
+    try {
+      profiles = await fs.readdir(path.join(basePath, 'profiles'));
+    } catch (e) { profiles = [`Error: ${e.message}`]; }
+    
+    try {
+      reports = await fs.readdir(path.join(basePath, 'reports'));
+    } catch (e) { reports = [`Error: ${e.message}`]; }
+
+    res.json({
+      message: "Verificare fisiere server",
+      current_dirname: __dirname,
+      base_path_server: basePath,
+      contents_of_profiles: profiles,
+      contents_of_reports: reports
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Create report with AI classification
 app.post('/api/reports', authenticateToken, upload.single('image'), async (req, res) => {
   try {

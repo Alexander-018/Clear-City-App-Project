@@ -16,7 +16,7 @@ export default function ProfilePage({ currentUser, darkMode, reports, onLogout, 
   const [uploadingImage, setUploadingImage] = useState(false);
   const navigate = useNavigate();
 
-  // 🔴 MODIFICARE: Folosim direct link-ul de Railway pentru a fi SIGURI că merge
+  // 🔴 URL-ul serverului Railway
   const API_URL = 'https://clear-city-app-project-production.up.railway.app';
 
   useEffect(() => {
@@ -86,6 +86,24 @@ export default function ProfilePage({ currentUser, darkMode, reports, onLogout, 
     }
   };
 
+  // Funcție Helper pentru a repara URL-urile (localhost -> railway)
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    
+    // 1. Cazul critic: Dacă imaginea are localhost în ea (din date vechi)
+    if (imagePath.includes('localhost:5000')) {
+        return imagePath.replace('http://localhost:5000', API_URL);
+    }
+    
+    // 2. Dacă e link extern (Google, etc) sau deja corect cu https
+    if (imagePath.startsWith('http')) {
+        return imagePath;
+    }
+    
+    // 3. Dacă e cale relativă (/uploads/...)
+    return `${API_URL}${imagePath}`;
+  };
+
   if (loading) {
     return (
       <div className="w-full max-w-md mx-auto p-4 flex items-center justify-center h-96">
@@ -117,7 +135,7 @@ export default function ProfilePage({ currentUser, darkMode, reports, onLogout, 
                   className={`w-28 h-28 rounded-2xl bg-cover bg-center shadow-lg ring-4 transition-transform group-hover:scale-105 ${darkMode ? 'ring-[#1A2C20]' : 'ring-white'}`}
                   style={{
                     backgroundImage: profile.profile_image 
-                      ? (profile.profile_image.startsWith('http') ? `url('${profile.profile_image}')` : `url('${API_URL}${profile.profile_image}')`)
+                      ? `url('${getImageUrl(profile.profile_image)}')`
                       : `url('https://i.pravatar.cc/150?u=${profile.id}')`
                   }}
                 ></div>
@@ -253,11 +271,9 @@ export default function ProfilePage({ currentUser, darkMode, reports, onLogout, 
                         <div 
                           className={`w-16 h-16 rounded-lg bg-cover bg-center shrink-0 border ${darkMode ? 'border-white/10' : 'border-gray-200'}`}
                           style={{
-                            // 🔴 MODIFICARE: Aplicăm aceeași logică de la profil și aici
+                            // 🔴 AICI ESTE FIX-UL CRITIC PENTRU RAPOARTE
                             backgroundImage: report.image 
-                              ? (report.image.startsWith('http') 
-                                  ? `url('${report.image}')` 
-                                  : `url('${API_URL}${report.image}')`) 
+                              ? `url('${getImageUrl(report.image)}')`
                               : 'none', 
                             backgroundColor: darkMode ? '#333' : '#eee'
                           }}

@@ -38,7 +38,7 @@ export default function MapPage({ darkMode, reports, externalcenter }) {
   const [selectedReport, setSelectedReport] = useState(null);
 
   // =====================================================================
-  // 🔴 URL SERVER RAILWAY (Adresa exactă care merge în browser)
+  // 🔴 URL SERVER RAILWAY
   // =====================================================================
   const SERVER_URL = 'https://clear-city-app-project-production.up.railway.app';
 
@@ -56,25 +56,28 @@ export default function MapPage({ darkMode, reports, externalcenter }) {
     }
   };
 
-  // 🔴 FUNCȚIA CARE REPARĂ LINK-UL POZEI
+  // 🔴 FUNCȚIA CARE REPARĂ LINK-UL POZEI (Fix Localhost)
   const getImageUrl = (report) => {
-    // 1. Luăm calea din baza de date (verificăm ambele nume posibile)
+    // 1. Luăm calea din baza de date
     let path = report.image || report.image_url;
 
     // 2. Dacă nu există, punem o poză generică
     if (!path) return "https://placehold.co/600x400?text=Fara+Poza";
 
-    // 3. Dacă e deja un link complet (începe cu http), îl lăsăm așa
+    // 🔴 3. FIX CRITIC: Dacă linkul conține localhost (din teste vechi), îl înlocuim cu Railway
+    if (path.includes('localhost:5000')) {
+        return path.replace('http://localhost:5000', SERVER_URL);
+    }
+
+    // 4. Dacă e deja un link complet valid (extern), îl lăsăm așa
     if (path.startsWith('http')) return path;
 
-    // 4. CURĂȚARE: Dacă path-ul nu începe cu '/', adăugăm noi unul
-    // Ca să fim siguri că nu lipim "https://site.comuploads" (greșit) ci "https://site.com/uploads" (corect)
+    // 5. Dacă path-ul nu începe cu '/', adăugăm noi unul
     if (!path.startsWith('/')) {
         path = '/' + path;
     }
 
-    // 5. LIPIREA FINALĂ
-    // Rezultatul va fi exact link-ul care ți-a mers ție în browser
+    // 6. LIPIREA FINALĂ
     return `${SERVER_URL}${path}`;
   };
 
@@ -117,14 +120,13 @@ export default function MapPage({ darkMode, reports, externalcenter }) {
                         </div>
                         <p className="text-sm">{selectedReport.description}</p>
                         
-                        {/* 🔴 AICI SE AFIȘEAZĂ POZA FOLOSIND FUNCȚIA DE MAI SUS */}
+                        {/* AICI SE AFIȘEAZĂ POZA REPARATĂ */}
                         <div className="mt-4 rounded-lg w-full h-48 overflow-hidden bg-gray-100 relative border border-gray-200">
                              <img 
                                src={getImageUrl(selectedReport)} 
                                className="w-full h-full object-cover" 
                                alt="Raport"
                                onError={(e) => {
-                                 // Dacă tot dă eroare, afișăm link-ul în consolă ca să vedem ce a generat greșit
                                  console.error("Link generat (care nu merge):", e.target.src);
                                  e.target.src = "https://placehold.co/600x400?text=Eroare+Afisare";
                                }}

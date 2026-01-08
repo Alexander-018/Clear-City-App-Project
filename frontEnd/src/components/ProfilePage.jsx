@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Award, X, Lock, Camera, Edit2, LogOut, Trash2, Check } from 'lucide-react'; // Am adaugat Check pentru butonul de salvare
+import { MapPin, Award, X, Lock, Camera, Edit2, LogOut, Trash2, Check } from 'lucide-react'; 
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
@@ -9,13 +9,14 @@ const GlassCard = ({ children, className = "", onClick, darkMode }) => (
   </div>
 );
 
-export default function ProfilePage({ currentUser, darkMode, reports, onLogout, onReportsUpdate }) {
+// 🟢 ACUM PRIMIM 'onProfileUpdate' CA PROP
+export default function ProfilePage({ currentUser, darkMode, reports, onLogout, onReportsUpdate, onProfileUpdate }) {
   const [showAchievements, setShowAchievements] = useState(false);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploadingImage, setUploadingImage] = useState(false);
   
-  // 🟢 State-uri noi pentru editarea numelui
+  // 🟢 State-uri pentru editarea numelui
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState('');
 
@@ -44,7 +45,7 @@ export default function ProfilePage({ currentUser, darkMode, reports, onLogout, 
     navigate('/');
   };
 
-  // 🟢 Funcție nouă pentru salvarea numelui
+  // 🟢 Funcție pentru salvarea numelui
   const handleSaveName = async () => {
     if (!newName.trim() || newName === profile.name) {
       setIsEditing(false);
@@ -62,6 +63,9 @@ export default function ProfilePage({ currentUser, darkMode, reports, onLogout, 
         savedUser.name = newName;
         localStorage.setItem('user', JSON.stringify(savedUser));
       }
+
+      // 🟢 NOTIFICĂM APLICAȚIA CĂ S-A SCHIMBAT PROFILUL
+      if (onProfileUpdate) await onProfileUpdate();
 
       setIsEditing(false);
       alert('✅ Nume actualizat cu succes!');
@@ -96,6 +100,9 @@ export default function ProfilePage({ currentUser, darkMode, reports, onLogout, 
       savedUser.profile_image = result.profile_image;
       localStorage.setItem('user', JSON.stringify(savedUser));
       
+      // 🟢 NOTIFICĂM APLICAȚIA CĂ S-A SCHIMBAT POZA
+      if (onProfileUpdate) await onProfileUpdate();
+
       alert('✅ Poza de profil a fost actualizată!');
     } catch (error) {
       console.error('Error uploading image:', error);

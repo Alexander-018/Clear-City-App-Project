@@ -27,8 +27,9 @@ export default function ClearCity() {
   const [loading, setLoading] = useState(true);
   const [mapCenter, setMapCenter] = useState(null);
    
-  const [email, setEmail] = useState('alex@demo.com');
-  const [password, setPassword] = useState('password');
+  // 🟢 MODIFICARE: Am scos valorile implicite, acum sunt goale
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
 
@@ -211,8 +212,10 @@ export default function ClearCity() {
                 
                 <div className="space-y-1.5">
                     <label className="text-xs font-medium text-[#0df259] ml-1 uppercase tracking-wider">Email</label>
+                    {/* 🟢 MODIFICARE: Placeholder adăugat aici */}
                     <input 
                       type="email" 
+                      placeholder="alex@demo.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -222,8 +225,10 @@ export default function ClearCity() {
                 
                 <div className="space-y-1.5">
                     <label className="text-xs font-medium text-[#0df259] ml-1 uppercase tracking-wider">Parolă</label>
+                    {/* 🟢 MODIFICARE: Placeholder adăugat aici */}
                     <input 
                       type="password" 
+                      placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required

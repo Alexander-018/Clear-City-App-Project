@@ -1,4 +1,3 @@
-
 import { Leaf, CheckCircle, Trophy, Recycle, Trash2, Info, Battery, ArrowRight, Loader2 } from 'lucide-react';
 
 const GlassCard = ({ children, className = "", onClick, darkMode }) => (
@@ -28,6 +27,13 @@ const PrimaryButton = ({ children, onClick, className = "", icon: Icon, disabled
 
 export default function HomePage({ darkMode, leaderboard = [], currentUser, onUpdateUser }) {
   const API_URL = process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+
+  // 🟢 CALCUL DINAMIC PENTRU MISIUNE
+  // Folosim total_reports din currentUser (care vine din backend)
+  const goal = 5;
+  const currentProgress = currentUser?.total_reports ? parseInt(currentUser.total_reports) : 0;
+  // Calculăm procentul (maxim 100% ca să nu iasă din bară)
+  const progressPercentage = Math.min((currentProgress / goal) * 100, 100);
 
   return (
     <div className={`flex flex-col animate-in fade-in duration-500 ${darkMode ? 'bg-[#0A120D]' : 'bg-gray-50'}`}>
@@ -66,12 +72,18 @@ export default function HomePage({ darkMode, leaderboard = [], currentUser, onUp
               </div>
               <h3 className="text-white text-2xl font-bold mb-2">Reciclează 5 obiecte de plastic</h3>
               <p className="text-gray-300 text-sm mb-4">Ajută la reducerea poluării în parcurile din România. Fă o poză la punctul de colectare.</p>
+              
+              {/* 🟢 BARA DE PROGRES MODIFICATĂ */}
               <div className="flex items-center gap-3 max-w-md">
                 <div className="flex-1 bg-white/10 rounded-full h-3 overflow-hidden">
-                  <div className="bg-[#0df259] h-full rounded-full transition-all duration-1000" style={{ width: '40%' }}></div>
+                  <div 
+                    className="bg-[#0df259] h-full rounded-full transition-all duration-1000" 
+                    style={{ width: `${progressPercentage}%` }}
+                  ></div>
                 </div>
-                <span className="text-sm font-bold text-[#0df259]">2/5</span>
+                <span className="text-sm font-bold text-[#0df259]">{currentProgress}/{goal}</span>
               </div>
+
             </div>
             <PrimaryButton className="w-full md:w-auto shrink-0" icon={ArrowRight}>Acceptă Provocarea</PrimaryButton>
           </div>

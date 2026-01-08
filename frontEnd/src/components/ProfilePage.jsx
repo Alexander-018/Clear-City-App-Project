@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Award, X, Lock, Camera, Edit2, LogOut, Trash2 } from 'lucide-react';
+import { MapPin, Award, X, Lock, Camera, Edit2, LogOut, Trash2, Check } from 'lucide-react'; // Am adaugat Check pentru butonul de salvare
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
@@ -14,6 +14,11 @@ export default function ProfilePage({ currentUser, darkMode, reports, onLogout, 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploadingImage, setUploadingImage] = useState(false);
+  
+  // 🟢 State-uri noi pentru editarea numelui
+  const [isEditing, setIsEditing] = useState(false);
+  const [newName, setNewName] = useState('');
+
   const navigate = useNavigate();
 
   // 🔴 URL-ul serverului Railway
@@ -37,6 +42,33 @@ export default function ProfilePage({ currentUser, darkMode, reports, onLogout, 
   const handleLogoutClick = () => {
     onLogout();
     navigate('/');
+  };
+
+  // 🟢 Funcție nouă pentru salvarea numelui
+  const handleSaveName = async () => {
+    if (!newName.trim() || newName === profile.name) {
+      setIsEditing(false);
+      return;
+    }
+
+    try {
+      await api.user.updateProfile({ name: newName });
+      
+      setProfile(prev => ({ ...prev, name: newName }));
+      
+      // Update localStorage pentru a persista schimbarea
+      const savedUser = JSON.parse(localStorage.getItem('user'));
+      if (savedUser) {
+        savedUser.name = newName;
+        localStorage.setItem('user', JSON.stringify(savedUser));
+      }
+
+      setIsEditing(false);
+      alert('✅ Nume actualizat cu succes!');
+    } catch (error) {
+      console.error('Eroare update nume:', error);
+      alert('❌ ' + error.message);
+    }
   };
 
   const handleImageUpload = async (e) => {
@@ -89,17 +121,17 @@ export default function ProfilePage({ currentUser, darkMode, reports, onLogout, 
   // Funcție Helper pentru a repara URL-urile (localhost -> railway)
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
-    
+     
     // 1. Cazul critic: Dacă imaginea are localhost în ea (din date vechi)
     if (imagePath.includes('localhost:5000')) {
         return imagePath.replace('http://localhost:5000', API_URL);
     }
-    
+     
     // 2. Dacă e link extern (Google, etc) sau deja corect cu https
     if (imagePath.startsWith('http')) {
         return imagePath;
     }
-    
+     
     // 3. Dacă e cale relativă (/uploads/...)
     return `${API_URL}${imagePath}`;
   };
@@ -163,12 +195,42 @@ export default function ProfilePage({ currentUser, darkMode, reports, onLogout, 
             </div>
             
             <div className="mt-4 text-center">
-                <div className="flex items-center justify-center gap-2">
-                    <h2 className="text-2xl font-bold tracking-tight">{profile.name}</h2>
-                    <button className={`p-1 rounded-full ${darkMode ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-gray-100 text-gray-500'} transition-colors`}>
-                      <Edit2 className="w-4 h-4" />
-                    </button>
+                {/* 🟢 SECTIUNEA MODIFICATA PENTRU NUME */}
+                <div className="flex items-center justify-center gap-2 h-10">
+                    {isEditing ? (
+                        <div className="flex items-center gap-2 animate-in fade-in zoom-in">
+                            <input 
+                                type="text" 
+                                value={newName}
+                                onChange={(e) => setNewName(e.target.value)}
+                                className={`w-32 px-2 py-1 rounded border text-sm focus:outline-none focus:ring-2 focus:ring-[#0df259] ${darkMode ? 'bg-black/50 border-white/20 text-white' : 'bg-white border-gray-300'}`}
+                                autoFocus
+                                onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
+                            />
+                            <button onClick={handleSaveName} className="p-1 text-green-500 hover:bg-green-500/10 rounded-full transition-colors">
+                                <Check className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => setIsEditing(false)} className="p-1 text-red-500 hover:bg-red-500/10 rounded-full transition-colors">
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+                    ) : (
+                        <>
+                            <h2 className="text-2xl font-bold tracking-tight">{profile.name}</h2>
+                            <button 
+                                onClick={() => {
+                                    setNewName(profile.name);
+                                    setIsEditing(true);
+                                }}
+                                className={`p-1 rounded-full ${darkMode ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-gray-100 text-gray-500'} transition-colors`}
+                            >
+                                <Edit2 className="w-4 h-4" />
+                            </button>
+                        </>
+                    )}
                 </div>
+                {/* 🔴 SFARSIT SECTIUNE MODIFICATA */}
+
                 <p className="text-gray-500 text-sm mt-1 flex items-center justify-center gap-1">
                   <MapPin className="w-4 h-4" /> 
                   {profile.location || 'București, RO'}

@@ -1,25 +1,42 @@
 import axios from 'axios';
 
 // =====================================================================
-// 🔴 CONFIGURARE URL BACKEND (MODIFICAT)
+// 🔴 CONFIGURARE URL BACKEND
 // =====================================================================
-// Acesta este link-ul tău de producție de pe Railway.
-// Îl exportăm ca să îl poți folosi și la afișarea imaginilor în alte fișiere.
 export const SERVER_URL = 'https://clear-city-app-project-production.up.railway.app';
 
-// URL-ul pentru API (construim adresa completă: server + /api)
+// URL-ul pentru API
 const API_URL = `${SERVER_URL}/api`;
 
 const api = axios.create({
   baseURL: API_URL, 
 });
 
+// Alege storage-ul dorit (localStorage = permanent, sessionStorage = dispare la închiderea tab-ului)
+const storage = localStorage; 
+
 const getAuthHeader = () => {
-  const token = localStorage.getItem('token');
+  const token = storage.getItem('token');
   return token ? { 'Authorization': `Bearer ${token}` } : {};
 };
 
+// 🟢 MODIFICARE CRITICĂ AICI
 const handleResponse = async (response) => {
+  // 1. Verificăm dacă token-ul a expirat (401) sau e invalid (403)
+  if (response.status === 401 || response.status === 403) {
+    // Ștergem datele utilizatorului
+    storage.removeItem('token');
+    storage.removeItem('user');
+    
+    // Forțăm reîmprospătarea paginii pentru a ajunge la Login
+    // Doar dacă nu suntem deja pe pagina de login (ca să nu facem loop infinit)
+    if (window.location.pathname !== '/') {
+        window.location.href = '/';
+    }
+    
+    throw new Error('Sesiunea a expirat. Te rugăm să te autentifici din nou.');
+  }
+
   const data = await response.json();
   if (!response.ok) {
     throw new Error(data.error || 'Ceva nu a mers bine');
@@ -38,11 +55,14 @@ export const authAPI = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
-    const data = await handleResponse(response);
+    // Nu folosim handleResponse aici direct pentru a putea salva tokenul
+    if (response.status === 401) throw new Error('Email sau parolă incorectă');
+    
+    const data = await response.json();
     
     if (data.token) {
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      storage.setItem('token', data.token);
+      storage.setItem('user', JSON.stringify(data.user));
     }
     
     return data;
@@ -54,27 +74,29 @@ export const authAPI = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password, location, latitude, longitude })
     });
-    const data = await handleResponse(response);
+    
+    const data = await handleResponse(response); // Aici putem folosi handleResponse
     
     if (data.token) {
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      storage.setItem('token', data.token);
+      storage.setItem('user', JSON.stringify(data.user));
     }
     
     return data;
   },
 
   logout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    storage.removeItem('token');
+    storage.removeItem('user');
+    window.location.href = '/'; // Redirect la login
   },
 
   isAuthenticated: () => {
-    return !!localStorage.getItem('token');
+    return !!storage.getItem('token');
   },
 
   getCurrentUser: () => {
-    const userStr = localStorage.getItem('user');
+    const userStr = storage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;
   }
 };
@@ -86,7 +108,9 @@ export const authAPI = {
 export const reportsAPI = {
   getAll: async (filters = {}) => {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_URL}/reports?${params}`);
+    const response = await fetch(`${API_URL}/reports?${params}`, {
+        headers: getAuthHeader() // Adaugam auth header si aici pt siguranta
+    });
     return handleResponse(response);
   },
 

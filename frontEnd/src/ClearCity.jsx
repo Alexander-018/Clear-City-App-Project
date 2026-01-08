@@ -26,7 +26,7 @@ export default function ClearCity() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mapCenter, setMapCenter] = useState(null);
-  
+   
   const [email, setEmail] = useState('alex@demo.com');
   const [password, setPassword] = useState('password');
   const [name, setName] = useState('');
@@ -148,7 +148,7 @@ export default function ClearCity() {
       
       setMapCenter([newReport.lat, newReport.lng]);
       
-      alert(`✅ Raport trimis! AI a detectat: ${result.classification?.wasteType} (${Math.round(result.classification?.confidence * 100)}% încredere)`);
+      // AICI AM SCOS MESAJUL DE CONFIRMARE (ALERT)
       
     } catch (error) {
       console.error('Error creating report:', error);

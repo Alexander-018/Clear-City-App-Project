@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; // Asigura-te ca importi useState
+import React, { useState } from 'react';
 import { Leaf, CheckCircle, Trophy, Recycle, Trash2, Info, Battery, ArrowRight, Loader2, X, Lightbulb } from 'lucide-react';
 
 const GlassCard = ({ children, className = "", onClick, darkMode }) => (
@@ -27,12 +27,23 @@ const PrimaryButton = ({ children, onClick, className = "", icon: Icon, disabled
 // --- PAGINA PRINCIPALĂ ---
 
 export default function HomePage({ darkMode, leaderboard = [], currentUser, onUpdateUser }) {
-  const API_URL = process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+  // 🟢 URL-ul Backend-ului (folosit pentru a încărca pozele)
+  const API_URL = process.env.REACT_APP_API_URL?.replace('/api', '') || 'https://clear-city-app-project-production.up.railway.app';
   
-  // 🟢 State pentru fereastra cu detalii (Pop-up)
+  // State pentru fereastra cu detalii (Pop-up)
   const [activeGuide, setActiveGuide] = useState(null);
 
-  // 🟢 Datele pentru fiecare tip de deșeu
+  // 🟢 FUNCȚIE PENTRU CONSTRUIREA CORECTĂ A URL-ULUI POZEI
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    // 1. Dacă e link extern (de ex. de la Google sau Pravatar), îl lăsăm așa
+    if (imagePath.startsWith('http')) return imagePath;
+    
+    // 2. Dacă e cale relativă (/uploads/...), îi punem serverul în față
+    return `${API_URL}${imagePath}`;
+  };
+
+  // Datele pentru fiecare tip de deșeu
   const wasteGuides = {
     plastic: {
       title: "Plastic & Metal",
@@ -80,7 +91,7 @@ export default function HomePage({ darkMode, leaderboard = [], currentUser, onUp
     }
   };
 
-  // 🟢 CALCUL DINAMIC PENTRU MISIUNE
+  // Calcul dinamic misiune
   const goal = 5;
   const currentProgress = currentUser?.total_reports ? parseInt(currentUser.total_reports) : 0;
   const progressPercentage = Math.min((currentProgress / goal) * 100, 100);
@@ -138,6 +149,7 @@ export default function HomePage({ darkMode, leaderboard = [], currentUser, onUp
           </div>
         </div>
 
+        {/* 🟢 SECTIUNE LEADERBOARD (Aici preluăm datele reale) */}
         <section className="relative pt-4">
           <div className="flex items-center gap-4 mb-6">
             <div className="h-px bg-gray-700 flex-1 opacity-20"></div>
@@ -160,8 +172,10 @@ export default function HomePage({ darkMode, leaderboard = [], currentUser, onUp
                   darkMode={darkMode}
                   className={`p-4 flex items-center gap-4 relative overflow-hidden group hover:bg-[#0df259]/5 ${index === 0 ? 'border-[#0df259]/30' : ''}`}
                 >
+                  {/* Linia verde pentru locul 1 */}
                   {index === 0 && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#0df259]"></div>}
 
+                  {/* Numărul poziției */}
                   <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm shrink-0 ${index === 0 ? 'bg-[#0df259] text-[#102216] shadow-lg shadow-[#0df259]/20 group-hover:scale-110' :
                     index === 1 ? 'bg-gray-400 text-white' :
                       index === 2 ? 'bg-orange-600 text-white' :
@@ -170,15 +184,17 @@ export default function HomePage({ darkMode, leaderboard = [], currentUser, onUp
                     {index + 1}
                   </div>
 
+                  {/* 🟢 POZA DE PROFIL (Se actualizează corect acum) */}
                   <div
                     className={`w-10 h-10 rounded-full bg-gray-500 bg-cover ${index === 0 ? 'ring-2 ring-[#0df259]/30' : ''}`}
                     style={{
-                      backgroundImage: user.profile_image
-                        ? (user.profile_image.startsWith('http') ? `url('${user.profile_image}')` : `url('${API_URL}${user.profile_image}')`)
+                      backgroundImage: user.profile_image 
+                        ? `url('${getImageUrl(user.profile_image)}')` 
                         : `url('https://i.pravatar.cc/150?u=${user.id}')`
                     }}
                   ></div>
 
+                  {/* Nume și nivel */}
                   <div className="flex-1">
                     <p className="font-bold text-base">{user.name}</p>
                     <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -186,9 +202,10 @@ export default function HomePage({ darkMode, leaderboard = [], currentUser, onUp
                     </p>
                   </div>
 
+                  {/* 🟢 PUNCTAJUL (XP) */}
                   <div className="text-right">
                     <p className={`font-bold ${index === 0 ? 'text-[#0df259]' : (darkMode ? 'text-gray-200' : 'text-gray-700')}`}>
-                      {user.xp.toLocaleString()}
+                      {user.xp ? user.xp.toLocaleString() : 0}
                     </p>
                     <p className="text-[10px] uppercase font-bold text-gray-500">pct</p>
                   </div>
@@ -204,7 +221,6 @@ export default function HomePage({ darkMode, leaderboard = [], currentUser, onUp
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             
-            {/* 🟢 CARDURILE MODIFICATE CU onClick */}
             <GlassCard 
               darkMode={darkMode} 
               onClick={() => setActiveGuide(wasteGuides.plastic)}
@@ -249,7 +265,7 @@ export default function HomePage({ darkMode, leaderboard = [], currentUser, onUp
         </section>
       </div>
 
-      {/* 🟢 MODALUL (POP-UP) PENTRU DETALII */}
+      {/* MODALUL (POP-UP) */}
       {activeGuide && (
         <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
             <div className="absolute inset-0" onClick={() => setActiveGuide(null)}></div>
